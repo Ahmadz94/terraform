@@ -27,7 +27,6 @@ resource "aws_security_group" "alb_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"] # allow browser access
   }
-
   egress {
     description = "All outbound"
     from_port   = 0
