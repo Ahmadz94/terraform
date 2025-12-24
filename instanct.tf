@@ -1,7 +1,7 @@
-# --- Ubuntu 24.04 AMI ---
+# --- Ubuntu 24.04
 data "aws_ami" "ubuntu_2404" {
   most_recent = true
-  owners      = ["099720109477"] # Canonical
+  owners      = ["099720109477"] 
 
   filter {
     name   = "name"
@@ -14,7 +14,7 @@ data "aws_ami" "ubuntu_2404" {
   }
 }
 
-# --- Security Group: ALB ---
+# --- SG-alb
 resource "aws_security_group" "alb_sg" {
   name        = "tf-easy-alb-sg"
   description = "ALB SG"
@@ -25,7 +25,7 @@ resource "aws_security_group" "alb_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"] # allow browser access
+    cidr_blocks = ["0.0.0.0/0"] 
   }
   egress {
     description = "All outbound"
@@ -36,7 +36,7 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-# --- Security Group: Instances ---
+# --- SG-instances
 resource "aws_security_group" "instance_sg" {
   name        = "tf-easy-instance-sg"
   description = "Instance SG"
@@ -67,7 +67,7 @@ resource "aws_security_group" "instance_sg" {
   }
 }
 
-# --- User data ---
+# --- Userdata
 locals {
   user_data = <<-EOF
     #!/bin/bash
@@ -85,7 +85,7 @@ locals {
   EOF
 }
 
-# --- EC2 instances ---
+# --- EC2
 resource "aws_instance" "a" {
   ami                         = data.aws_ami.ubuntu_2404.id
   instance_type               = "t3a.micro"
@@ -110,7 +110,7 @@ resource "aws_instance" "b" {
   tags = { Name = "tf-easy-ec2-b" }
 }
 
-# --- Application Load Balancer ---
+# --- ALB
 resource "aws_lb" "app" {
   name               = "tf-easy-alb"
   load_balancer_type = "application"
