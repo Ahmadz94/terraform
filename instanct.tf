@@ -14,11 +14,7 @@ data "aws_ami" "ubuntu_2404" {
   }
 }
 
-
-key_name = "AWS-PC"
-
-
-
+# --- Security Group: ALB ---
 resource "aws_security_group" "alb_sg" {
   name        = "tf-easy-alb-sg"
   description = "ALB SG"
@@ -29,7 +25,7 @@ resource "aws_security_group" "alb_sg" {
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["79.177.151.90"] #only my ip for now
+    cidr_blocks = ["0.0.0.0/0"] # allow browser access
   }
 
   egress {
@@ -41,7 +37,7 @@ resource "aws_security_group" "alb_sg" {
   }
 }
 
-# Instance SG: SSH from your IP + HTTP from ALB only
+# --- Security Group: Instances ---
 resource "aws_security_group" "instance_sg" {
   name        = "tf-easy-instance-sg"
   description = "Instance SG"
@@ -52,7 +48,7 @@ resource "aws_security_group" "instance_sg" {
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["79.177.151.90"] #only my ip for now
+    cidr_blocks = ["79.177.151.90/32"]
   }
 
   ingress {
@@ -72,7 +68,7 @@ resource "aws_security_group" "instance_sg" {
   }
 }
 
-# --userdata
+# --- User data ---
 locals {
   user_data = <<-EOF
     #!/bin/bash
@@ -81,7 +77,7 @@ locals {
     apt-get update -y
     apt-get install -y docker.io
 
-    systemctl enable 
+    systemctl enable --now docker
     usermod -aG docker ubuntu || true
 
     docker rm -f hostname-docker 2>/dev/null || true
@@ -90,13 +86,13 @@ locals {
   EOF
 }
 
-# --- EC2
+# --- EC2 instances ---
 resource "aws_instance" "a" {
   ami                         = data.aws_ami.ubuntu_2404.id
   instance_type               = "t3a.micro"
   subnet_id                   = aws_subnet.public_a.id
   vpc_security_group_ids      = [aws_security_group.instance_sg.id]
-  key_name                    = aws_key_pair.main.key_name
+  key_name                    = "AWS-PC"
   associate_public_ip_address = true
   user_data                   = local.user_data
 
@@ -108,14 +104,14 @@ resource "aws_instance" "b" {
   instance_type               = "t3a.micro"
   subnet_id                   = aws_subnet.public_b.id
   vpc_security_group_ids      = [aws_security_group.instance_sg.id]
-  key_name                    = aws_key_pair.main.key_name
+  key_name                    = "AWS-PC"
   associate_public_ip_address = true
   user_data                   = local.user_data
 
   tags = { Name = "tf-easy-ec2-b" }
 }
 
-# --- LB
+# --- Application Load Balancer ---
 resource "aws_lb" "app" {
   name               = "tf-easy-alb"
   load_balancer_type = "application"
