@@ -15,10 +15,7 @@ data "aws_ami" "ubuntu_2404" {
 }
 
 
-resource "aws_key_pair" "main" {
-  key_name   = "AWS-PC"
-  public_key = file("~/.ssh/id_ed25519.pub")
-}
+key_name = "AWS-PC"
 
 
 
