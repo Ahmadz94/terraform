@@ -88,26 +88,26 @@ locals {
 # --- EC2
 resource "aws_instance" "a" {
   ami                         = data.aws_ami.ubuntu_2404.id
-  instance_type               = "t3a.micro"
+  instance_type               = var.instance_type
   subnet_id                   = aws_subnet.public_a.id
   vpc_security_group_ids      = [aws_security_group.instance_sg.id]
   key_name                    = "AWS-PC"
   associate_public_ip_address = true
   user_data                   = local.user_data
 
-  tags = { Name = "tf-easy-ec2-a" }
+  tags = { Name = var.instance_name }
 }
 
 resource "aws_instance" "b" {
   ami                         = data.aws_ami.ubuntu_2404.id
-  instance_type               = "t3a.micro"
+  instance_type               = var.instance_type
   subnet_id                   = aws_subnet.public_b.id
   vpc_security_group_ids      = [aws_security_group.instance_sg.id]
   key_name                    = "AWS-PC"
   associate_public_ip_address = true
   user_data                   = local.user_data
 
-  tags = { Name = "tf-easy-ec2-b" }
+  tags = { Name = var.instance_name }
 }
 
 # --- ALB
@@ -137,10 +137,17 @@ resource "aws_lb_target_group" "tg" {
 
   tags = { Name = "tf-easy-tg" }
 }
+locals {
+  target_instances = [
+    aws_instance.a.id,
+    aws_instance.b.id,
 
+  ]
+}
 resource "aws_lb_target_group_attachment" "a" {
+  for_each = local.target_instances
   target_group_arn = aws_lb_target_group.tg.arn
-  target_id        = aws_instance.a.id
+  target_id        = each
   port             = 80
 }
 
