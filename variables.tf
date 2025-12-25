@@ -13,7 +13,7 @@ variable "aws_key_name" {
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t3.micro"
+  default     = "t3a.micro"
 }
 
 variable "instance_name" {
