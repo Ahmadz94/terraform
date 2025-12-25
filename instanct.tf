@@ -137,17 +137,9 @@ resource "aws_lb_target_group" "tg" {
 
   tags = { Name = "tf-easy-tg" }
 }
-locals {
-  target_instances = [
-    aws_instance.a.id,
-    aws_instance.b.id,
-
-  ]
-}
 resource "aws_lb_target_group_attachment" "a" {
-  for_each = local.target_instances
   target_group_arn = aws_lb_target_group.tg.arn
-  target_id        = each
+  target_id        = aws_instance.a.id
   port             = 80
 }
 
